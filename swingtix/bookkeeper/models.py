@@ -3,7 +3,13 @@ from future.utils import python_2_unicode_compatible
 from builtins import object
 from django.utils import timezone
 from django.db import models
-from .account_api import AccountBase, BookSetBase, ProjectBase
+from django.utils.translation import ugettext_lazy as _
+
+from .account_api import (
+    AccountBase, 
+    BookSetBase, 
+    ProjectBase
+)
 
 
 class _AccountApi(AccountBase):
@@ -72,15 +78,42 @@ class Project(models.Model, ProjectBase):
     def __str__(self):
         return '<Project {0}>'.format(self.name)
 
+
 @python_2_unicode_compatible
 class Account(models.Model, _AccountApi):
     """ A financial account in a double-entry bookkeeping bookset.  For example
     a chequing account, or bank-fee expense account.
 
 
+    Account types and their positive credit rules
+    
+                        Debit        Credit    positive_credit
+        Asset           Increase     Decrease  False  
+        Liability       Decrease     Increase  True
+        Income/Revenue  Decrease     Increase  True
+        Expense         Increase     Decrease  False
+        Equity/Capital  Decrease     Increase  True
+        
+        src: https://en.wikipedia.org/wiki/Debits_and_credits
+
+
     Limitations: no currency information is stored; all entries are assumed to
     be in the same currency at the rest of the book.
     """
+    
+    ASSET = "asset"
+    LIABILITY = "liability"
+    REVENUE = "revenue"
+    EXPENSE = "expense"
+    EQUITY = "equity"
+    
+    ACCOUNT_CLASSES = (
+        (ASSET, _("Asset")),
+        (LIABILITY, _("Liability")),
+        (REVENUE, _("Income/Revenue")),
+        (EXPENSE, _("Expense")),
+        (EQUITY, _("Equity/Capital")),
+    )
 
     #Future considerations:
     #
@@ -99,6 +132,11 @@ class Account(models.Model, _AccountApi):
     def get_bookset(self):
         return self.bookset
 
+    account_class = models.CharField(
+        _("Account Class"),
+        max_length = 64,
+        choices = ACCOUNT_CLASSES
+    )
     positive_credit = models.BooleanField(
         """credit entries increase the value of this account.  Set to False for
         Asset & Expense accounts, True for Liability, Revenue and Equity accounts.""",
@@ -110,6 +148,13 @@ class Account(models.Model, _AccountApi):
     class Meta(object):
         unique_together = ('bookset', 'name')
 
+    def __init__(self, *args, **kwargs):
+        super(Account, self).__init__(*args, **kwargs)
+        if self.account_class in [self.ASSET, self.EXPENSE]:
+            self.positive_credit = False
+        else:
+            self.positive_credit = True
+            
     #functions needed by _AccountApi
     def _make_ae(self, amount, memo, tx):
         ae = AccountEntry()
@@ -138,7 +183,7 @@ class ThirdParty(models.Model):
 
     Each third party is associated with a bookkeeping account (traditionally
     either the AR or AP account).  A third party's account can be accessed by
-    calling "get_third_party(thid_party)" on the asscoiated account.  This also
+    calling "get_third_party(thid_party)" on the associated account.  This also
     works in combination with Projects: call get_third_party from the project's
     AR and AP accounts instead of the global ones.
 

@@ -509,7 +509,7 @@ class SimpleTest(TestCase):
         arA_party2=project_a.get_third_party(party2)
         arB_party2=project_b.get_third_party(party2)
 
-        #project-sub-accounts are idenpendant of other projects, and other sub-acccounts.
+        #project-sub-accounts are independant of other projects, and other sub-acccounts.
         self.assertEqual(ar.balance(), Decimal("0.00"))
         self.assertEqual(arA.balance(), Decimal("0.00"))
         self.assertEqual(arB.balance(), Decimal("0.00"))
