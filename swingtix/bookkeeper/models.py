@@ -206,7 +206,7 @@ class ThirdParty(models.Model):
     name = models.TextField("name memo",
         help_text="""this field is only used for displaying information during
             debugging.  It's best to use a OneToOne relationship with another
-            tabel to hold all the information you actually need.""")
+            table to hold all the information you actually need.""")
 
     account = models.ForeignKey(Account, related_name="third_parties",
         help_text="""The parent account: typically an 'AR' or 'AP' account.""")
@@ -238,7 +238,7 @@ class Transaction(models.Model):
     are best avoided because it's more difficult to import those transactions
     into other financial software.
 
-    Invarients:
+    Invariants:
         1. All entries for each transaction transaction must add up to zero.
         (This invarient may be enforced in the future.)
 

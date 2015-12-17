@@ -11,7 +11,8 @@ Models..
 ThirdParty must implement:
 
     get_account(self):
-        " Return the parent 'account' (typically an AR or AP account, possibly tied to a project) that the third party is part of.  "
+        " Return the parent 'account' (typically an AR or AP account, possibly tied to a project)
+         that the third party is part of.  "
 
 """
 
@@ -82,7 +83,9 @@ class LedgerEntry(object):
         return "{:04d}{:02d}{:02d}{:08d}".format(d.year, d.month, d.day, self._e.aeid)
 
     def other_entry(self):
-        """ Returns the account of the other leg of this transaction.  Asserts if there's more than two legs. """
+        """ Returns the account of the other leg of this transaction.  
+        Asserts if there's more than two legs. 
+        """
         l = self.other_entries()
         assert len(l) == 1
         return l[0][1]
